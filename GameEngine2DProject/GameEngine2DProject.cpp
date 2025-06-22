@@ -11,11 +11,31 @@ HINSTANCE hInst;                                // 현재 인스턴스입니다.
 WCHAR szTitle[MAX_LOADSTRING];                  // 제목 표시줄 텍스트입니다.
 WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름입니다.
 
+//프레임 타이머 관련 변수
+double deltaTime = 0.0;                         // 프레임 간 시간 차이를 저장하는 변수입니다.
+LARGE_INTEGER startTime;                        // 프레임 시작 시각을 저장하는 변수입니다.
+LARGE_INTEGER endTime;                          // 프레임 종료 시각을 저장하는 변수입니다.
+LARGE_INTEGER freq;                             // 타이머의 해상도를 저장하는 변수입니다.
+
 // 이 코드 모듈에 포함된 함수의 선언을 전달합니다:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
+
+//디버깅 관련 함수들
+void CreateConsole(); // 콘솔을 생성하는 함수
+
+//게임 로직 관련 함수들
+void Start();
+void Update();
+void Render();
+
+// 프레임 시작과 끝을 알리는 함수들
+void StartFrame();
+void EndFrame();
+
+void ShowFPS(); // FPS를 출력하는 함수
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -37,21 +57,32 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     {
         return FALSE;
     }
+	Start(); // 게임 시작 함수 호출
+
+	CreateConsole(); // 콘솔 생성 함수 호출
 
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_GAMEENGINE2DPROJECT));
 
     MSG msg;
 
-    // 기본 메시지 루프입니다:
-    while (GetMessage(&msg, nullptr, 0, 0))
+    while (true)
     {
-        if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
+        if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
         {
+            if (msg.message == WM_QUIT) break; // ⬅️ 종료
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
+		// 메시지가 없을 때 게임 루프를 실행합니다.
+        else
+        {
+			StartFrame(); // 프레임 시작
+			EndFrame(); // 프레임 종료   
+        }
+
     }
 
+    
     return (int) msg.wParam;
 }
 
@@ -178,3 +209,74 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     }
     return (INT_PTR)FALSE;
 }
+
+// 콘솔을 생성하는 함수
+void CreateConsole()
+{
+    AllocConsole();
+    FILE* fp;
+    freopen_s(&fp, "CONOUT$", "w", stdout);
+	freopen_s(&fp, "CONOUT$", "w", stderr); // 표준 출력과 오류 출력을 콘솔로 리다이렉트합니다.
+}
+// 게임 로직 관련 함수들 구현
+void StartFrame()
+{
+    QueryPerformanceCounter(&startTime); // 프레임 시작 시 타이머 시작
+    // 프레임의 시작 작업을 여기에 작성합니다.
+    // 예: 물리 충돌, 업데이트 로직 등.
+}
+
+void EndFrame()
+{
+    QueryPerformanceCounter(&endTime); // 프레임 종료 시 타이머 종료
+    // 프레임 간 시간 차이를 계산합니다.
+    deltaTime = static_cast<double>(endTime.QuadPart - startTime.QuadPart) / static_cast<double>(freq.QuadPart); // 밀리초 단위로 변환
+    // 프레임 종료 후 작업을 여기에 작성합니다.
+
+    Update(); // 게임 업데이트 함수 호출
+	ShowFPS(); // FPS를 출력하는 함수 호출
+	Render(); // 렌더링 함수 호출
+     
+    // 예: 화면 업데이트, 렌더링 완료 등
+}
+void Start()
+{
+    QueryPerformanceFrequency(&freq);   // 해상도 받아오는 함수. 정밀 시간 연산에 사용.
+	// 게임 시작 로직을 여기에 작성합니다.
+}
+void Update()
+{
+	// 게임 업데이트 로직을 여기에 작성합니다.
+}
+void Render()
+{
+	// 게임 렌더링 로직을 여기에 작성합니다.
+	// 예: 화면에 그리기 작업 수행
+}
+void ShowFPS()
+{
+    static double timeAccumulator = 0.0;
+    timeAccumulator += deltaTime;
+
+    if (timeAccumulator >= 1.0)
+    {
+        double fps = 1.0 / deltaTime;
+
+        // 콘솔 출력
+        printf("FPS : %.2f\n", fps);
+        fflush(stdout);
+
+        // 디버그 출력
+        wchar_t buffer[100];
+        swprintf_s(buffer, 100, L"FPS : %.2f\n", fps);
+        OutputDebugStringW(buffer);
+
+        // 창 제목에 FPS 표시
+        HWND hWnd = GetForegroundWindow();  // 현재 포그라운드 윈도우
+        swprintf_s(buffer, 100, L"GameEngine2DProject - FPS : %.2f", fps);
+        SetWindowTextW(hWnd, buffer);
+
+        timeAccumulator = 0.0;
+    }
+}
+
