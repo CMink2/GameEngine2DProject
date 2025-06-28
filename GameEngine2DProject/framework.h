@@ -14,3 +14,6 @@
 #include <memory.h>
 #include <tchar.h>
 #include <stdio.h>
+
+// 게임 오브젝트 관련 헤더 파일
+#include "GameObject.h"
