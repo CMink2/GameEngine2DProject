@@ -10,6 +10,9 @@
 HINSTANCE hInst;                                // 현재 인스턴스입니다.
 WCHAR szTitle[MAX_LOADSTRING];                  // 제목 표시줄 텍스트입니다.
 WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름입니다.
+HWND g_hWnd;                                    // 현재 윈도우 핸들을 저장하는 전역 변수입니다.
+
+wchar_t g_windowTitle[100];                          // 윈도우 제목을 저장하는 전역 변수입니다.
 
 //프레임 타이머 관련 변수
 double deltaTime = 0.0;                         // 프레임 간 시간 차이를 저장하는 변수입니다.
@@ -126,20 +129,17 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 //
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-   hInst = hInstance; // 인스턴스 핸들을 전역 변수에 저장합니다.
+    hInst = hInstance;
 
-   HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
+    g_hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
 
-   if (!hWnd)
-   {
-      return FALSE;
-   }
+    if (!g_hWnd) return FALSE;
 
-   ShowWindow(hWnd, nCmdShow);
-   UpdateWindow(hWnd);
+    ShowWindow(g_hWnd, nCmdShow);
+    UpdateWindow(g_hWnd);
 
-   return TRUE;
+    return TRUE;
 }
 
 //
@@ -179,8 +179,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             PAINTSTRUCT ps;
             hdc = BeginPaint(hWnd, &ps);
             // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
-			hdc = GetDC(hWnd); // 현재 윈도우의 DC를 가져옵니다.
-            
             EndPaint(hWnd, &ps);
         }
         break;
@@ -253,33 +251,49 @@ void Update()
 }
 void Render()
 {
-	// 게임 렌더링 로직을 여기에 작성합니다.
-	// 예: 화면에 그리기 작업 수행
+	HDC hdc = GetDC(g_hWnd); // 현재 윈도우의 DC를 가져옵니다.
+	RECT rect;
+	GetClientRect(g_hWnd, &rect); // 윈도우의 클라이언트 영역을 가져옵니다.
+	int width = rect.right - rect.left; // 클라이언트 영역의 너비
+	int height = rect.bottom - rect.top; // 클라이언트 영역의 높이
+
+	HDC memDC = CreateCompatibleDC(hdc); // 메모리 DC 생성
+	HBITMAP hBitmap = CreateCompatibleBitmap(hdc, width, height); // 메모리 DC에 사용할 비트맵 생성
+	HBITMAP hOldBitmap = (HBITMAP)SelectObject(memDC, hBitmap); // 메모리 DC에 비트맵 선택
+	// 메모리 DC에 그리기 작업을 수행합니다.
+    //배경 색상
+	HBRUSH hBrush = CreateSolidBrush(RGB(255, 255, 255)); // 흰색 브러시 생성
+	FillRect(memDC, &rect, hBrush); // 메모리 DC에 배경 색상 채우기
+	// 브러시 해제
+	DeleteObject(hBrush);
+
+    //오브젝트 랜더링
+    
+    //실제 화면 랜더링
+	BitBlt(hdc, 0, 0, width, height, memDC, 0, 0, SRCCOPY); // 메모리 DC의 내용을 화면에 복사
+
+
+    //사용한 메모리 해제 작업.
+	SelectObject(memDC, hOldBitmap); // 메모리 DC에서 이전 비트맵을 선택
+	DeleteObject(hBitmap); // 비트맵 삭제
+	DeleteDC(memDC); // 메모리 DC 삭제
+	ReleaseDC(g_hWnd, hdc); // 윈도우 DC 해제
 }
 void ShowFPS()
 {
     static double timeAccumulator = 0.0;
     timeAccumulator += deltaTime;
 
-    if (timeAccumulator >= 1.0)
-    {
-        double fps = 1.0 / deltaTime;
+    double fps = 1.0 / deltaTime;
 
-        // 콘솔 출력
-        printf("FPS : %.2f\n", fps);
-        fflush(stdout);
+    // 디버그 출력
+    wchar_t buffer[100];
+    swprintf_s(buffer, 100, L"FPS : %.2f\n", fps);
+    OutputDebugStringW(buffer);
+    timeAccumulator = 0.0;
 
-        // 디버그 출력
-        wchar_t buffer[100];
-        swprintf_s(buffer, 100, L"FPS : %.2f\n", fps);
-        OutputDebugStringW(buffer);
-
-        // 창 제목에 FPS 표시
-        HWND hWnd = GetForegroundWindow();  // 현재 포그라운드 윈도우
-        swprintf_s(buffer, 100, L"GameEngine2DProject - FPS : %.2f", fps);
-        SetWindowTextW(hWnd, buffer);
-
-        timeAccumulator = 0.0;
-    }
+    // 창 제목에 FPS 표시
+    swprintf_s(buffer, 100, L"GameEngine2DProject - FPS : %.2f", fps);
+    SetWindowTextW(g_hWnd, buffer);
 }
 
