@@ -1,10 +1,11 @@
 #pragma once
+#include <Windows.h>
 #include <vector>
 class GameObject
 {
 public:
 	virtual void Update() = 0; // 게임 오브젝트 업데이트 함수	
-	virtual void Render() = 0; // 게임 오브젝트 렌더링 함수
+	virtual void Render(HDC hdc) = 0; // 게임 오브젝트 렌더링 함수
 	virtual ~GameObject() = default; // 가상 소멸자
 };
 
@@ -26,9 +27,9 @@ public:
 			obj->Update(); // 모든 게임 오브젝트를 업데이트합니다.
 		}
 	}
-	void RenderAll() {
+	void RenderAll(HDC hdc) {
 		for (GameObject* obj : gameObjects) {
-			obj->Render(); // 모든 게임 오브젝트를 렌더링합니다.
+			obj->Render(hdc); // 모든 게임 오브젝트를 렌더링합니다.
 		}
 	}
 	void Clear() {
