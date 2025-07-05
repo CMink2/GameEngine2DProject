@@ -1,24 +1,61 @@
 #pragma once
 #include "GameObject.h"
+#include "BitMapManager.h"
 #include <Windows.h>
+
+#define BITMAP_PLAYER_PATH L"BitMap\\Player\\player.bmp"
+
 class Player : public GameObject
 {
 public:
-	// 플레이어 클래스는 GameObject를 상속받아 게임 오브젝트의 기능을 확장합니다.
-	int x; // 플레이어의 x 좌표
-	int y; // 플레이어의 y 좌표
-	int width; // 플레이어의 너비
-	int height; // 플레이어의 높이
+	int x, y, width, height;
+	HBITMAP hBitmap;
 
-	Player() = default; // 기본 생성자
-	~Player() override = default; // 소멸자
-	void Update() override {
-		// 플레이어 업데이트 로직 구현
-		x+=1; // 예시로 x 좌표를 증가시키는 로직
+	Player() :
+		x(100), y(100), width(50), height(50), hBitmap(nullptr)
+	{
+		std::wstring bmpPath = BitMapManager::GetFullPathFromExe(BITMAP_PLAYER_PATH);
+
+		// 디버깅 경로 출력
+		wchar_t debugMsg[512];
+		swprintf_s(debugMsg, 512, L"[DEBUG] Full Path: %s\n", bmpPath.c_str());
+		OutputDebugStringW(debugMsg);
+
+		if (!BitMapManager::GetInstance().HasBitmap("player"))
+		{
+			BitMapManager::GetInstance().LoadBitmap("player", bmpPath);
+		}
+
+		hBitmap = BitMapManager::GetInstance().GetBitmap("player");
+		if (!hBitmap) {
+			DWORD err = GetLastError();
+			swprintf_s(debugMsg, 512, L"Failed to load bitmap. Error code: %lu\n", err);
+			OutputDebugStringW(debugMsg);
+			assert(false && "Failed to load bitmap!");
+		}
 	}
+
+	~Player() override = default;
+
+	void Update() override {
+		if (GetAsyncKeyState(VK_LEFT) & 0x8000) x -= 1;
+		if (GetAsyncKeyState(VK_RIGHT) & 0x8000) x += 1;
+		if (GetAsyncKeyState(VK_UP) & 0x8000) y -= 1;
+		if (GetAsyncKeyState(VK_DOWN) & 0x8000) y += 1;
+	}
+
 	void Render(HDC hdc) override {
-		// 플레이어 렌더링 로직 구현
-		Rectangle(hdc, x, y, x + width, y + height); // 플레이어를 사각형으로 그립니다.
+		if (hBitmap) {
+			HDC bmpDC = CreateCompatibleDC(hdc);
+			HBITMAP oldBmp = (HBITMAP)SelectObject(bmpDC, hBitmap);
+
+			BitBlt(hdc, x, y, width, height, bmpDC, 0, 0, SRCCOPY);
+
+			SelectObject(bmpDC, oldBmp);
+			DeleteDC(bmpDC);
+		}
+		else {
+			Rectangle(hdc, x, y, x + width, y + height);
+		}
 	}
 };
-

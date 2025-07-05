@@ -12,6 +12,7 @@ WCHAR szTitle[MAX_LOADSTRING];                  // 제목 표시줄 텍스트입
 WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름입니다.
 HWND g_hWnd;                                    // 현재 윈도우 핸들을 저장하는 전역 변수입니다.
 
+// 게임 오브젝트 매니저와 플레이어 객체를 전역 변수로 선언합니다.
 GameObjectManager gameObjectManager;            // 게임 오브젝트 매니저 생성
 Player* player;                                 // 플레이어 객체 생성
 
@@ -52,6 +53,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(lpCmdLine);
 
     // TODO: 여기에 코드를 입력합니다.
+    //std::wstring playerBmpPath = BitMapManager::GetFullPathFromExe(L"player.bmp"); // 플레이어 비트맵의 전체 경로를 가져옵니다.
+    //BitMapManager::GetInstance().LoadBitmap("player", playerBmpPath);
+    std::wstring bmpPath = BitMapManager::GetFullPathFromExe(BITMAP_PLAYER_PATH);
 
     // 전역 문자열을 초기화합니다.
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
@@ -242,7 +246,7 @@ void EndFrame()
     // 프레임 종료 후 작업을 여기에 작성합니다.
 
     Update(); // 게임 업데이트 함수 호출
-	ShowFPS(); // FPS를 출력하는 함수 호출
+	//ShowFPS(); // FPS를 출력하는 함수 호출
 	Render(); // 렌더링 함수 호출
      
     // 예: 화면 업데이트, 렌더링 완료 등
@@ -251,12 +255,10 @@ void Start()
 {
     QueryPerformanceFrequency(&freq);   // 해상도 받아오는 함수. 정밀 시간 연산에 사용.
 	// 게임 시작 로직을 여기에 작성합니다.
-	player = new Player(); // 플레이어 객체 생성
-	player->x = 100; // 플레이어의 초기 x 좌표 설정
-	player->y = 100; // 플레이어의 초기 y 좌표 설정
-	player->width = 50; // 플레이어의 너비 설정
-	player->height = 50; // 플레이어의 높이 설정
+    //std::wstring bmpPath = BitMapManager::GetFullPathFromExe(BITMAP_PLAYER_PATH);
+    //BitMapManager::GetInstance().LoadBitmap("player", L"player.bmp"); // 플레이어 비트맵 로드
 
+	player = new Player(); // 플레이어 객체 생성
 	gameObjectManager.AddGameObject(player); // 게임 오브젝트 매니저에 플레이어 추가
 }
 void Update()

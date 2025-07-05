@@ -18,3 +18,5 @@
 // 게임 오브젝트 관련 헤더 파일
 #include "GameObject.h"
 #include "Player.h"
+#include "BitMapManager.h"
+#include "BitMapManager.h"

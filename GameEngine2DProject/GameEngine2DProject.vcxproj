@@ -127,6 +127,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="BitMapManager.h" />
+    <ClInclude Include="FilePath.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="GameEngine2DProject.h" />
     <ClInclude Include="GameObject.h" />
@@ -135,6 +137,8 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BitMapManager.cpp" />
+    <ClCompile Include="FilePath.cpp" />
     <ClCompile Include="GameEngine2DProject.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="Player.cpp" />
@@ -144,6 +148,7 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="GameEngine2DProject.ico" />
+    <Image Include="player.bmp" />
     <Image Include="small.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
